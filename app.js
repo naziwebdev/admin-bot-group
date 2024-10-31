@@ -1,26 +1,52 @@
 const { Telegraf } = require("telegraf");
+const redis = require("./redis");
 require("dotenv").config();
 
 const token = process.env.TELEGRAM_TOKEN;
 
 const bot = new Telegraf(token);
 
-
 //join member to group
-bot.on("new_chat_members", (ctx) => {
+bot.on("new_chat_members", async (ctx) => {
   const newMebmer = ctx.message.new_chat_member.first_name;
+
+  //for check invite count
+  const newMembers = ctx.message.new_chat_members;
+  const inviter = ctx.message.from.id;
+
+  for (const member of newMembers) {
+    await redis.incr(`user:${inviter}:invited`);
+  }
 
   ctx.reply(`${newMebmer}  عزیز به گروه خوش آمدید 😍`);
 });
 
-
-
 //left member the group
-bot.on("left_chat_member", (ctx) => {
+bot.on("left_chat_member", async (ctx) => {
   const leftMember = ctx.message.left_chat_member.first_name;
+  const inviter = ctx.message.from.id;
+
+  await redis.del(`user:${inviter}:invited`);
 
   ctx.reply(`${leftMember} از گروه لفت داد`);
 });
 
+bot.on("message", async (ctx) => {
+  const message = ctx.message.text;
+  const userId = ctx.message.from.id;
+  const groupId = ctx.message.chat.id;
 
-bot.launch()
+  const invitedCount = await redis.get(`user:${userId}:invited`);
+
+
+
+  if (invitedCount > 1) {
+    ctx.reply("ok");
+  } else {
+    ctx.reply(
+      `${ctx.message.from.first_name} برای ارسال پیام در گروه ابندا یک نفر را به گروه دعوت کنید`
+    );
+  }
+});
+
+bot.launch();
