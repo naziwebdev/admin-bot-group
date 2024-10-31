@@ -2,7 +2,12 @@ const { Telegraf } = require("telegraf");
 const redis = require("./redis");
 require("dotenv").config();
 
-const { banUser, unbanUser } = require("./actions/actions");
+const {
+  banUser,
+  unbanUser,
+  promoteUser,
+  demoteUser,
+} = require("./actions/actions");
 
 const token = process.env.TELEGRAM_TOKEN;
 
@@ -58,6 +63,10 @@ bot.on("message", async (ctx) => {
             banUser(ctx, userIdReplied);
           } else if (message === "/unban") {
             unbanUser(ctx, userIdReplied);
+          } else if (message === "/promote") {
+            promoteUser(ctx, userIdReplied);
+          } else if (message === "/demote") {
+            demoteUser(ctx, userIdReplied);
           }
         }
       }
