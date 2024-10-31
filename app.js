@@ -67,6 +67,9 @@ bot.on("message", async (ctx) => {
             promoteUser(ctx, userIdReplied);
           } else if (message === "/demote") {
             demoteUser(ctx, userIdReplied);
+          } else if (message === "/del") {
+            await ctx.deleteMessage(ctx.message.reply_to_message.message_id);
+            ctx.reply("پیام با موفقیت حذف شد");
           }
         }
       }
