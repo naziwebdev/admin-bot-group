@@ -2,6 +2,8 @@ const { Telegraf } = require("telegraf");
 const redis = require("./redis");
 require("dotenv").config();
 
+const { banUser, unbanUser } = require("./actions/actions");
+
 const token = process.env.TELEGRAM_TOKEN;
 
 const bot = new Telegraf(token);
@@ -38,11 +40,30 @@ bot.on("message", async (ctx) => {
 
   const invitedCount = await redis.get(`user:${userId}:invited`);
 
+  // get role user
+  const chatMemberRole = await ctx.telegram.getChatMember(groupId, userId);
 
-
-  if (invitedCount > 1) {
-    ctx.reply("ok");
+  if (
+    (invitedCount > 1 && chatMemberRole.status !== "creator") ||
+    chatMemberRole.status !== "administrator"
+  ) {
+    if (ctx.message.reply_to_message) {
+      if (message.startsWith("/")) {
+        if (
+          chatMemberRole.status === "creator" ||
+          chatMemberRole.status === "administrator"
+        ) {
+          const userIdReplied = ctx.message.reply_to_message.from.id;
+          if (message === "/ban") {
+            banUser(ctx, userIdReplied);
+          } else if (message === "/unban") {
+            unbanUser(ctx, userIdReplied);
+          }
+        }
+      }
+    }
   } else {
+    ctx.deleteMessage();
     ctx.reply(
       `${ctx.message.from.first_name} برای ارسال پیام در گروه ابندا یک نفر را به گروه دعوت کنید`
     );
